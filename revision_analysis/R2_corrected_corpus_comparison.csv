@@ -1,0 +1,9 @@
+field,max_absolute_change,rows_changed_above_1e-8
+stack_temperature_C,0.0,0
+cathode_air_temperature_C,0.0,0
+fc_power_W,2.000888343900442e-11,0
+battery_power_W,106.8192258914017,7767
+SOC,0.027737367983347028,38866
+hydrogen_gps,1.3993194708399048e-05,75
+unmet_power_W,2.000888343900442e-11,0
+fan_power_W,0.0,0
