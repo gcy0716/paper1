@@ -38,5 +38,19 @@ for analysis, source, baseline in (
 
 df = pd.DataFrame(rows, columns=('analysis', 'agent_seed', 'metric', 'n_scenarios',
                                  'mean_delta', 'ci95_low', 'ci95_high'))
+additional = []
+for seed in (11, 22, 33):
+    a = REFINED[(REFINED.agent_seed == seed) &
+                (REFINED.variant == 'fallback')].set_index('scenario_seed').sort_index()
+    b = REFINED[(REFINED.agent_seed == seed) &
+                (REFINED.variant == 'p90')].set_index('scenario_seed').sort_index()
+    assert list(a.index) == list(b.index) == list(range(3101, 3121))
+    for metric in ('peak_temperature_C', 'fan_energy_Wh'):
+        diff = (b[metric] - a[metric]).to_numpy()
+        means = RNG.choice(diff, size=(10000, 20), replace=True).mean(axis=1)
+        lo, hi = np.quantile(means, (0.025, 0.975))
+        additional.append(('thermal_refined_0p05s_all20', seed, metric, 20,
+                           diff.mean(), lo, hi))
+df = pd.concat((df, pd.DataFrame(additional, columns=df.columns)), ignore_index=True)
 df.to_csv(OUT / 'cross_review_locked_intervals.csv', index=False)
 print(df.to_string(index=False))
