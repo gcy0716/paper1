@@ -1,0 +1,10 @@
+{
+  "peak_temperature_C": 0.0,
+  "fan_energy_Wh": 0.0,
+  "hydrogen_g": 0.0,
+  "final_SOC": 0.0,
+  "unmet_energy_kJ": 0.0,
+  "violation_steps": 0.0,
+  "predictive_override_steps": 0.0,
+  "reactive_override_steps": 0.0
+}

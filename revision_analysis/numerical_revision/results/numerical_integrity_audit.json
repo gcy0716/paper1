@@ -1,0 +1,57 @@
+{
+  "thermal_sensitivity": {
+    "rows": 220,
+    "violated": 3,
+    "terminated": 1
+  },
+  "closed_loop_thermal_refinement": {
+    "rows": 80,
+    "violated": 0,
+    "terminated": 0
+  },
+  "development_episodes": {
+    "rows": 300,
+    "violated": 16,
+    "terminated": 0
+  },
+  "holdout_episodes": {
+    "rows": 240,
+    "violated": 0,
+    "terminated": 0
+  },
+  "refined_holdout_episodes": {
+    "rows": 120,
+    "violated": 0,
+    "terminated": 0
+  },
+  "rating_current_plant": {
+    "rows": 6,
+    "violated": 1,
+    "terminated": 0
+  },
+  "selected_alarm_C": 62.5,
+  "development_energy_difference_Wh": 0.026704259987985424,
+  "failure_4302": {
+    "violating_samples": 474,
+    "all_full_fan": true,
+    "duration_s": 1200.0
+  },
+  "failure_4306": {
+    "violating_samples": 436,
+    "all_full_fan": true,
+    "duration_s": 689.5
+  },
+  "failure_4314": {
+    "violating_samples": 236,
+    "all_full_fan": true,
+    "duration_s": 1200.0
+  },
+  "input_sha256": {
+    "matlab_model_x650_v03/create_pemfc_rl_env_v03.m": "0c4b1e8a4720d9c0dcf1f52b90c380bffb82a4e765343c898ab88d39858c6de3",
+    "matlab_model_x650_v03/build_predictive_safety_scenario_v02.m": "7262bd9a2978959e75c65f4c08b59f8db9aa71100386122949bff451e8c9cbb8",
+    "matlab_model_x650_v03/results/multiseed_v05_finetuned/seed_11/sac_seed_11_finetuned_5episodes_v05.mat": "84120a72edaedf04ab7b53a72bfcbcaf26819fb7a0a8847ceb5f249693312e0a",
+    "matlab_model_x650_v03/results/multiseed_v05_finetuned/seed_22/sac_seed_22_finetuned_5episodes_v05.mat": "b84d941b867b98f779383cbf09a7e74dfedaede8f78b8d0c3a697c45d054b265",
+    "matlab_model_x650_v03/results/multiseed_v05_finetuned/seed_33/sac_seed_33_finetuned_5episodes_v05.mat": "18bc5ca6a8e8bdaf0fdf0e4f2ef2116ced4a07ee6f13eb0afdfc5b6ce2f012c6"
+  },
+  "result": "PASS"
+}

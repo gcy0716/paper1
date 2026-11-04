@@ -31,3 +31,7 @@ The first two use dedicated scenario seeds 4101–4120 and 4201–4220. The adde
 All temperature, power and hydrogen outcomes are simulated. No measured thermal transient, cathode airflow or flight trajectory is included. The 1.7 kW architecture and several thermal parameters are conceptual. P90 is a model prediction used as a cooling trigger; its 80% two-sided interval calibration does not imply a 90% safety guarantee.
 
 No software license has been assigned. Please contact the authors about reuse beyond inspection and reproduction of the reported analyses.
+
+## Additional numerical revision checks
+
+See [the numerical revision README](revision_analysis/numerical_revision/README.md) for thermal-only integration checks, one-factor sensitivity including retained failures, the illustrative rating comparison, and development-selected alarm testing on a disjoint holdout. The new analyses do not provide independent experimental validation. Python additionally requires SciPy.

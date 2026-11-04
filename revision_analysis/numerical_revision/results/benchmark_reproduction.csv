@@ -1,0 +1,2 @@
+scenario_seed,agent_seed,variant,peak_temperature_C,fan_energy_Wh,hydrogen_g,final_SOC,unmet_energy_kJ,violation_steps,predictive_override_steps,reactive_override_steps,duration_s
+4301,11,alarm63,55.5651278764068,6.00837975237246,29.8528992943031,0.542667626067825,0,0,0,0,1200
