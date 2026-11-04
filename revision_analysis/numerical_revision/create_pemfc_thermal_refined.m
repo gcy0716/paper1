@@ -59,7 +59,7 @@ logged=struct('k',0,'h',h,'Tamb',Tamb,'rho',rho,'loadScale',loadScale, ...
     'fanPowerScale',fanPowerScale,'Ts',initialTs,'Ta',initialTa,'prevTs',initialTs, ...
     'fan',.4,'prevCommand',.4,'soc',initialSOC,'Pfc',0,'qgen',0,'rewardSum',0,'fanWh',0, ...
     'h2g',0,'unmetKJ',0,'violations',0,'overrides',0, ...
-    'predictiveOverrides',0,'reactiveOverrides',0,'predictedP90',nan,'riskHistory',zeros(0,19,'single'), ...
+    'predictiveOverrides',0,'reactiveOverrides',0,'predictedP90',nan,'predictiveHoldRemaining',0,'riskHistory',zeros(0,19,'single'), ...
     'demandWh',0,'totalLoadWh',0,'servedLoadWh',0,'fcDcWh',0, ...
     'batteryDischargeWh',0,'batteryChargeWh',0, ...
     'temperatureCost',0,'fanCost',0,'smoothCost',0,'unmetCost',0);
@@ -70,6 +70,14 @@ function [obs,reward,isDone,logged]=localStep(action,logged,p)
 proposed=min(max(double(action(1)),p.fan.minCommand),p.fan.maxCommand);
 t=logged.k*p.sim.dt; demand=powerDemand(t,logged,p);
 [predictedAction,predictiveOverride,predictedP90]=predictiveSafetyFilter(proposed,logged,p);
+if isfield(p.control,'predictiveHoldSteps') && p.control.predictiveHoldSteps>1
+    if predictiveOverride
+        logged.predictiveHoldRemaining=p.control.predictiveHoldSteps-1;
+    elseif logged.predictiveHoldRemaining>0
+        predictedAction=1; predictiveOverride=true;
+        logged.predictiveHoldRemaining=logged.predictiveHoldRemaining-1;
+    end
+end
 reactiveEnabled=true;
 if isfield(p,'control') && isfield(p.control,'useReactiveSafety'), reactiveEnabled=p.control.useReactiveSafety; end
 if reactiveEnabled
@@ -178,7 +186,7 @@ if ~enabled || size(l.riskHistory,1)<120, return; end
 % Update at the locked 5 s interval. Between updates retain no forced action;
 % a new prediction is required for each intervention block.
 if mod(l.k,10)~=0, return; end
-[S,delta]=riskAssets(); F=(l.riskHistory-S.mu)./S.sigma;
+[S,delta]=riskAssets(p); F=(l.riskHistory-S.mu)./S.sigma;
 raw=predict(S.net,dlarray(reshape(F',[size(F,2),size(F,1),1]),'CTB'));
 raw=gather(extractdata(raw)); d1=softplus(raw(2)); d2=softplus(raw(3));
 quantile=.9;
@@ -200,13 +208,18 @@ margin=2; if isfield(p.control,'predictiveMargin_C'), margin=p.control.predictiv
 if p90>=p.thermal.Tmax_C-margin, safe=1; overridden=true; end
 end
 
-function [S,delta]=riskAssets()
-persistent cached cachedDelta
-if isempty(cached)
-    root=fileparts(which('create_pemfc_rl_env_v03'));
-    cached=load(fullfile(root,'results','probability_dataset_v01','quantile_gru_results','quantile_gru_h10s_v01.mat'));
-    C=readtable(fullfile(root,'results','probability_dataset_v01','quantile_gru_results','quantile_gru_calibration_v01.csv'));
+function [S,delta]=riskAssets(p)
+persistent cached cachedDelta cachedPath cachedCalibrationPath
+root=fileparts(which('create_pemfc_rl_env_v03'));
+modelPath=fullfile(root,'results','probability_dataset_v01','quantile_gru_results','quantile_gru_h10s_v01.mat');
+calibrationPath=fullfile(root,'results','probability_dataset_v01','quantile_gru_results','quantile_gru_calibration_v01.csv');
+if isfield(p.control,'predictorModelFile'), modelPath=char(p.control.predictorModelFile); end
+if isfield(p.control,'predictorCalibrationFile'), calibrationPath=char(p.control.predictorCalibrationFile); end
+if isempty(cached) || ~strcmp(cachedPath,modelPath) || ~strcmp(cachedCalibrationPath,calibrationPath)
+    cached=load(modelPath);
+    C=readtable(calibrationPath);
     cachedDelta=C.interval_expansion_C(C.horizon_s==10);
+    cachedPath=modelPath; cachedCalibrationPath=calibrationPath;
 end
 S=cached; delta=cachedDelta;
 end

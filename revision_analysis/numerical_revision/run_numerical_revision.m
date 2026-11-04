@@ -64,6 +64,90 @@ elseif stage=="refinement"
         writetable(rows,fullfile(out,'closed_loop_thermal_refinement.csv'));
         fprintf('REFINEMENT_DONE seed=%d rows=%d\n',seed,height(rows));
     end
+elseif stage=="locked_refined"
+    seeds=[11 22 33];
+    if ~isempty(agentFilter), seeds=agentFilter; end
+    agents=cell(size(seeds));
+    for j=1:numel(seeds), agents{j}=loadAgent(model,seeds(j)); end
+    rows=table();
+    for scenario=3101:3120
+        [p0,~]=build_predictive_safety_scenario_v02(scenario,"final_test");
+        for j=1:numel(seeds)
+            for variant=["fallback","p90"]
+                p=p0; p.sim.thermalSubsteps=10;
+                p.control.usePredictiveSafety=variant=="p90";
+                p.control.predictiveMargin_C=2;
+                [row,~]=episode(agents{j},p,scenario,seeds(j),variant,false);
+                rows=[rows;row]; %#ok<AGROW>
+            end
+        end
+        writetable(rows,fullfile(out,'locked_refined_episodes.csv'));
+        fprintf('LOCKED_REFINED_DONE scenario=%d rows=%d\n',scenario,height(rows));
+    end
+elseif stage=="corrected_predictor_locked"
+    corrected=fullfile(root,'corrected_probability_dataset_r2','quantile_gru_results');
+    modelFile=fullfile(corrected,'quantile_gru_h10s_v01.mat');
+    calibrationFile=fullfile(corrected,'quantile_gru_calibration_v01.csv');
+    assert(exist(modelFile,'file')==2 && exist(calibrationFile,'file')==2);
+    seeds=[11 22 33]; agents=cell(size(seeds));
+    for j=1:numel(seeds), agents{j}=loadAgent(model,seeds(j)); end
+    rows=table();
+    for scenario=3101:3120
+        [p0,~]=build_predictive_safety_scenario_v02(scenario,"final_test");
+        p0.control.predictorModelFile=modelFile;
+        p0.control.predictorCalibrationFile=calibrationFile;
+        for j=1:numel(seeds)
+            p=p0; p.control.usePredictiveSafety=true;
+            p.control.predictiveMargin_C=2;
+            [row,~]=episode(agents{j},p,scenario,seeds(j),"corrected_corpus_p90",false);
+            rows=[rows;row]; %#ok<AGROW>
+        end
+        writetable(rows,fullfile(out,'corrected_predictor_locked_episodes.csv'));
+        fprintf('CORRECTED_PREDICTOR_LOCKED_DONE scenario=%d rows=%d\n',scenario,height(rows));
+    end
+elseif stage=="corrected_predictor_alarm_holdout"
+    corrected=fullfile(root,'corrected_probability_dataset_r2','quantile_gru_results');
+    modelFile=fullfile(corrected,'quantile_gru_h10s_v01.mat');
+    calibrationFile=fullfile(corrected,'quantile_gru_calibration_v01.csv');
+    assert(exist(modelFile,'file')==2 && exist(calibrationFile,'file')==2);
+    seeds=[11 22 33]; agents=cell(size(seeds));
+    for j=1:numel(seeds), agents{j}=loadAgent(model,seeds(j)); end
+    rows=table();
+    for scenario=4501:4520
+        [p0,~]=build_predictive_safety_scenario_v02(scenario,"ablation");
+        p0.control.predictorModelFile=modelFile;
+        p0.control.predictorCalibrationFile=calibrationFile;
+        for j=1:numel(seeds)
+            p=p0; p.control.usePredictiveSafety=true;
+            p.control.predictiveMargin_C=2;
+            [row,~]=episode(agents{j},p,scenario,seeds(j),"corrected_corpus_p90",false);
+            rows=[rows;row]; %#ok<AGROW>
+        end
+        writetable(rows,fullfile(out,'corrected_predictor_alarm_holdout_episodes.csv'));
+        fprintf('CORRECTED_PREDICTOR_HOLDOUT_DONE scenario=%d rows=%d\n',scenario,height(rows));
+    end
+elseif stage=="held_predictor_alarm_holdout" || stage=="held_predictor_alarm_holdout_refined"
+    corrected=fullfile(root,'corrected_probability_dataset_r2','quantile_gru_results');
+    modelFile=fullfile(corrected,'quantile_gru_h10s_v01.mat');
+    calibrationFile=fullfile(corrected,'quantile_gru_calibration_v01.csv');
+    seeds=[11 22 33]; agents=cell(size(seeds));
+    for j=1:numel(seeds), agents{j}=loadAgent(model,seeds(j)); end
+    rows=table();
+    for scenario=4501:4520
+        [p0,~]=build_predictive_safety_scenario_v02(scenario,"ablation");
+        p0.control.predictorModelFile=modelFile;
+        p0.control.predictorCalibrationFile=calibrationFile;
+        p0.control.predictiveHoldSteps=10;
+        if stage=="held_predictor_alarm_holdout_refined", p0.sim.thermalSubsteps=10; end
+        for j=1:numel(seeds)
+            p=p0; p.control.usePredictiveSafety=true;
+            p.control.predictiveMargin_C=2;
+            [row,~]=episode(agents{j},p,scenario,seeds(j),"held_corrected_p90",false);
+            rows=[rows;row]; %#ok<AGROW>
+        end
+        writetable(rows,fullfile(out,stage+"_episodes.csv"));
+        fprintf('HELD_PREDICTOR_HOLDOUT_DONE scenario=%d rows=%d\n',scenario,height(rows));
+    end
 elseif stage=="rating"
     source=readtable(fullfile(model,'results','sac_v04_ft_seed11_test_comparison_v03.csv'));
     source=source(string(source.policy)=="mpc" & source.seed==505,:);

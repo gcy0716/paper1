@@ -1,10 +1,13 @@
-function metrics=calibrate_quantile_gru_v01()
+function metrics=calibrate_quantile_gru_v01(dataDirOverride,horizonsOverride)
 % Validation-only conformal expansion of trained GRU P10-P90 intervals.
 root=fileparts(mfilename('fullpath'));
 dataDir=fullfile(root,'results','probability_dataset_v01');
+if nargin>=1 && ~isempty(dataDirOverride), dataDir=char(dataDirOverride); end
 modelDir=fullfile(dataDir,'quantile_gru_results');
 T=readtable(fullfile(dataDir,'thermal_trajectories_v01.csv'),'TextType','string');
-T=addDerived(T); horizons=[10 30 60]; dt=.5; targetCoverage=.8;
+T=addDerived(T); horizons=[10 30 60];
+if nargin>=2 && ~isempty(horizonsOverride), horizons=horizonsOverride; end
+dt=.5; targetCoverage=.8;
 metrics=table(); calibration=table();
 
 for horizon=horizons

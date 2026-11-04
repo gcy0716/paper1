@@ -1,4 +1,4 @@
-function metrics = train_quantile_gru_v01(maxEpochs,miniBatchSize,smokeTest)
+function metrics = train_quantile_gru_v01(maxEpochs,miniBatchSize,smokeTest,dataDirOverride,horizonsOverride)
 % Joint monotone P10/P50/P90 GRU forecasts for 10/30/60 s horizons.
 % Training/normalisation/checkpoint selection use train/validation only.
 if nargin<1, maxEpochs=30; end
@@ -7,6 +7,7 @@ if nargin<3, smokeTest=false; end
 
 root=fileparts(mfilename('fullpath'));
 dataDir=fullfile(root,'results','probability_dataset_v01');
+if nargin>=4 && ~isempty(dataDirOverride), dataDir=char(dataDirOverride); end
 out=fullfile(dataDir,'quantile_gru_results');
 if ~exist(out,'dir'), mkdir(out); end
 source=fullfile(dataDir,'thermal_trajectories_v01.csv');
@@ -29,6 +30,7 @@ mu=mean(trainMatrix,1); sigma=std(trainMatrix,0,1); sigma(sigma<1e-6)=1;
 
 dt=0.5; historySeconds=60; historySteps=round(historySeconds/dt);
 strideSteps=10; horizonsSeconds=[10 30 60];
+if nargin>=5 && ~isempty(horizonsOverride), horizonsSeconds=horizonsOverride; end
 metrics=table();
 
 for horizonSeconds=horizonsSeconds
